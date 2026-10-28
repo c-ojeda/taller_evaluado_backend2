@@ -1,5 +1,7 @@
 from uuid import uuid4
 
+from app.shared.database import get_connection
+
 from fastapi import HTTPException, status
 
 from app.pets.pets_repository import PetsRepository, pets_repository
@@ -52,6 +54,41 @@ class StudentsService:
             createdAt=now,
             updatedAt=now,
         )
+
+        # INICIO DE LA TRANSACCIÓN
+        with get_connection() as connection:
+            with connection.transaction(): 
+                # 1. Guardar estudiante en la base de datos usando la transacción
+                self.repository.save_tx(student, connection)
+
+                # 2. Iterar e insertar mascotas
+                for pet_data in data.pets:
+                    existing = self.pets_repository.find_by_student_and_name_tx(
+                        student.id, pet_data.name, connection
+                    )
+
+                    # Si el nombre choca, se lanza la excepción y 'connection.transaction()' 
+                    # hace un ROLLBACK automático de todo lo insertado (incluyendo el estudiante).
+                    if existing is not None:
+                        raise conflict(
+                            {"name": {"message": f"Ya tienes una mascota con el nombre {pet_data.name}"}}
+                        )
+
+                    pet_now = utc_now()
+                    pet = Pet(
+                        id=str(uuid4()),
+                        studentId=student.id,
+                        name=pet_data.name,
+                        species=pet_data.species,
+                        age=pet_data.age,
+                        createdAt=pet_now,
+                        updatedAt=pet_now,
+                    )
+
+                    # Guardar mascota en la base de datos usando la transacción
+                    self.pets_repository.save_tx(pet, connection)
+
+        return student
 
         self.repository.save(student)
 

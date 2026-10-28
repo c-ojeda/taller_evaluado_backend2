@@ -1,5 +1,6 @@
 from app.shared.database import get_connection
 from app.students.students_schemas import Student
+import psycopg 
 
 
 class StudentsRepository:
@@ -74,3 +75,28 @@ class StudentsRepository:
     def delete(self, student_id: str) -> None:
         with get_connection() as connection:
             connection.execute("DELETE FROM students WHERE id = %s", (student_id,))
+
+    def save_tx(self, student: Student, connection: psycopg.Connection) -> Student:
+        """Guarda un estudiante utilizando una conexión existente (para transacciones)."""
+        query = '''
+            INSERT INTO students (id, name, username, email, age, "createdAt", "updatedAt")
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET
+                name = EXCLUDED.name,
+                username = EXCLUDED.username,
+                email = EXCLUDED.email,
+                age = EXCLUDED.age,
+                "updatedAt" = EXCLUDED."updatedAt"
+            RETURNING id, name, username, email, age, "createdAt", "updatedAt"
+        '''
+        values = (
+            student.id,
+            student.name,
+            student.username,
+            str(student.email),
+            student.age,
+            student.createdAt,
+            student.updatedAt,
+        )
+        row = connection.execute(query, values).fetchone()
+        return self._to_student(row)
