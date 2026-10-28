@@ -7,6 +7,8 @@ Proyecto FastAPI que implementa un **CRUD** para la entidad `Student` y sus `Pet
 - Python 3.13
 - FastAPI + repositorios en memoria
 - HTML + JS + Tailwind CSS (frontend estático)
+- Docker
+- SQLAlchemy
 
 ## Resumen funcional
 
@@ -217,12 +219,23 @@ El cliente estático (`public/`) consume este estándar de forma uniforme:
     uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 3000
     ```
 
-La aplicación queda disponible en:
+##ACCESOS LOCALES - PROYECTO BACKEND FASTAPI
 
-- `http://localhost:3000`
-- `http://localhost:3000/docs`
+1. SERVIDOR API (FASTAPI)
+- Frontend/Base: http://localhost:3000
+- Documentación Swagger: http://localhost:3000/docs
 
-> Al ser un almacenamiento en memoria, los datos se pierden cada vez que se reinicia el servidor (incluido el reload de desarrollo).
+2. ADMINISTRADOR DE BASE DE DATOS (PGADMIN)
+- Enlace: http://localhost:5050
+- Correo de acceso: admin@admin.com
+- Contraseña de acceso: admin_password
+
+3. CONEXIÓN A POSTGRESQL (DENTRO DE PGADMIN)
+- Host name/address: db
+- Port: 5432
+- Maintenance database: taller_db
+- Username: postgres
+- Password: postgres_password
 
 ## Comandos útiles
 
@@ -232,3 +245,6 @@ La aplicación queda disponible en:
 - `make format` — formatea el código con Ruff
 - `make format-check` — verifica el formato
 - `make clean` — elimina `.venv`, cachés y artefactos
+- `docker compose up --build`
+- `docker compose up`
+- `docker compose down`
